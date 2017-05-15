@@ -24,13 +24,14 @@
     ],
     "require": {
         "php": ">=5.5",
-        "rb/sphinx-hmac": "v1.0.0",
+        "rb/sphinx-hmac": "dev-develop",
         "zendframework/zend-http": "~2.5"
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
     "extra": {
         "branch-alias": {
+            "dev-master": "0.1-dev",
             "dev-develop": "0.1-dev"
         }
     },
