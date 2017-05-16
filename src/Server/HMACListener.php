@@ -60,6 +60,7 @@ class HMACListener implements ListenerAggregateInterface
     public function attach(EventManagerInterface $events, $priority = 1)
     {
         $this->listeners[] = $events->attach(MvcEvent::EVENT_ROUTE, [$this, '__invoke'], -1000);
+        $this->listeners[] = $events->attach(MvcEvent::EVENT_FINISH, [$this, 'onFinish'], -1000);
     }
 
     /**
@@ -315,7 +316,7 @@ class HMACListener implements ListenerAggregateInterface
          */
         if (isset($this->restParams['controller'])) {
             $controller = $this->restParams['controller'];
-        } elseif(is_null($e)) {
+        } elseif (is_null($e)) {
             $controller = null;
         } else {
             $params = $e->getRouteMatch()->getParams();
@@ -363,7 +364,7 @@ class HMACListener implements ListenerAggregateInterface
             /**
              * Se não existir a chave, ou se o valor for FALSE ou NULL, não tratar este Action com o HMAC
              */
-            if (!array_key_exists($action, $config ['rb_sphinx_hmac_server'] ['controllers'] [$controller] ['actions']) || $config ['rb_sphinx_hmac_server'] ['controllers'] [$controller] ['actions'] [$action] === FALSE || $config ['rb_sphinx_hmac_server'] ['controllers'] [$controller] ['actions'] [$action] === NULL) {
+            if ((!array_key_exists($action, $config ['rb_sphinx_hmac_server'] ['controllers'] [$controller] ['actions']) || $config ['rb_sphinx_hmac_server'] ['controllers'] [$controller] ['actions'] [$action] === FALSE || $config ['rb_sphinx_hmac_server'] ['controllers'] [$controller] ['actions'] [$action] === NULL) && !isset($config ['rb_sphinx_hmac_server'] ['controllers'] [$controller] ['actions'] ['_all'])) {
                 return false;
             }
         }
@@ -396,6 +397,7 @@ class HMACListener implements ListenerAggregateInterface
          * Adapter é obrigatório
          */
         $adapter = $this->_getActionConfig($config, $controller, $action, 'adapter');
+
         if ($adapter === NULL || $adapter === '') {
             throw new HMACException('HMAC ADAPTER não definido para Controller ' . $controller);
         }
@@ -430,9 +432,11 @@ class HMACListener implements ListenerAggregateInterface
                 if (array_key_exists($configKey, $config ['rb_sphinx_hmac_server'] ['controllers'] [$controller] ['actions'] [$action])) {
                     $value = $config ['rb_sphinx_hmac_server'] ['controllers'] [$controller] ['actions'] [$action] [$configKey];
                 }
+            } elseif (isset($config ['rb_sphinx_hmac_server'] ['controllers'] [$controller] ['actions'] ['_all'][$configKey])) {
+                $value = $config ['rb_sphinx_hmac_server'] ['controllers'] [$controller] ['actions'] ['_all'][$configKey];
             }
         }
-
+        
         /**
          * Verificar $configKey específico para o controller
          */

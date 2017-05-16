@@ -40,20 +40,10 @@ class Module implements AutoloaderProviderInterface, ConfigProviderInterface
         /**
          * Baixa prioridade, para avaliar necessidade de autenticação HMAC após todas as operações de rota
          */
+        // Adiciona listener HMACListener no eventManager do ZF
         $services->get('RB\Sphinx\Hmac\Zend\Server\HMACListener')->attach($em);
 
         $sharedEvents = $em->getSharedManager();
         $services->get('RB\Sphinx\Hmac\Zend\Server\HMACListener')->attachShared($sharedEvents);
-
-        //RestParametersListener.php
-
-        /**
-         * Baixa prioridade, para acrescentar assinatura HMAC após todas as operações na resposta
-         */
-        $moduleRouteListener = new ModuleRouteListener();
-        $moduleRouteListener->attach($em);
-        $em->attach(
-            MvcEvent::EVENT_FINISH, array($services->get('RB\Sphinx\Hmac\Zend\Server\HMACListener'), 'onFinish'), -1000
-        );
     }
 }
