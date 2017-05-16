@@ -27,6 +27,12 @@ return array (
 				
 				// Defina quais controller's utilizarão autenticação HMAC
 				'controllers' => array (
+						'Application\Controller\Api2' => array (
+                            'actions' => array (
+                                /* Aplica o HMAC em todas as actions*/
+                                '_all' => TRUE,
+                             )
+                        )
 						'Application\Controller\Api' => array (
 								
 								// Opcionalmente, defina seletor e/ou adapter padrão para as Action's deste Controller
