@@ -117,7 +117,8 @@ class HMACListener implements ListenerAggregateInterface
                  * Registrar Adapter para disponibilizar ao Controller via Plugin
                  */
                 $e->setParam('RBSphinxHmacAdapter', $this->adapter);
-
+                $hmacIdentity = $e->getApplication()->getServiceManager()->get(\RB\Sphinx\Hmac\Zend\Server\Identity\HMACIdentity::class);
+                $hmacIdentity->setHmacAdapter($this->adapter);
 
                 $result = $this->adapter->authenticate($request, $this->selector, $e->getApplication()->getServiceManager(), $e);
             } else {
@@ -182,6 +183,10 @@ class HMACListener implements ListenerAggregateInterface
          * Registrar identidade autenticada para que fique acessível ao Controller
          */
         $e->setParam('RBSphinxHmacAdapterIdentity', $result->getIdentity());
+
+        if (isset($hmacIdentity)) {
+            $hmacIdentity->setHmacIdentity($result->getIdentity());
+        }
     }
 
     /**
@@ -436,7 +441,7 @@ class HMACListener implements ListenerAggregateInterface
                 $value = $config ['rb_sphinx_hmac_server'] ['controllers'] [$controller] ['actions'] ['_all'][$configKey];
             }
         }
-        
+
         /**
          * Verificar $configKey específico para o controller
          */
@@ -506,7 +511,7 @@ class HMACListener implements ListenerAggregateInterface
         if (!$controller instanceof RestController) {
             return;
         }
-        
+
         $this->_debug('onRestEvent');
 
         $sessionStart = false;
@@ -515,7 +520,7 @@ class HMACListener implements ListenerAggregateInterface
          * Guardar nome do evento REST
          */
         $this->restParams['restEvent'] = $this->resolveAction($e);
-        
+
         /**
          * Verificar configuração de autenticação HMAC
          * $this->selector será definido a partir da configuração
@@ -559,19 +564,23 @@ class HMACListener implements ListenerAggregateInterface
             $descricao = implode(" ", $result->getMessages());
             if ($this->adapter !== null)
                 $descricao .= " (" . $this->adapter->getHmacDescription() . ' v' . $this->adapter->getVersion() . ")";
-            
+
             return new ApiProblemResponse(new ApiProblem(401, $descricao));
         } else {
             /**
              * Registrar Adapter para disponibilizar ao Controller via Plugin
              */
             $e->setParam('RBSphinxHmacAdapter', $this->adapter);
+            $hmacIdentity = $e->getApplication()->getServiceManager()->get(\RB\Sphinx\Hmac\Zend\Server\Identity\HMACIdentity::class);
+            $hmacIdentity->setHmacAdapter($this->adapter);
 
             /**
              * Salvar Identity no ResourceEvent para que o Resource possa utiliza-lo
              */
-            if (!$sessionStart)
+            if (!$sessionStart) {
                 $e->setParam('RBSphinxHmacAdapterIdentity', $result->getIdentity());
+                $hmacIdentity->setHmacIdentity($result->getIdentity());
+            }
         }
 
         if ($sessionStart) {
